@@ -241,6 +241,7 @@
                                 <button class="make-owner-button" onclick="makeOwner('${user.userID}')">Сделать новым владельцем</button>
                             </div>`;
                         });
+
                     } else {
                         searchResult.innerHTML += '<p>Нет пользователей</p>';
                     }
@@ -251,7 +252,7 @@
                             searchResult.innerHTML += `
                             <div class="admin-block">
                                 <p>${admin.name} (${admin.TGname}) — UserID: ${admin.userID}</p>
-                                <button class="make-owner-button" onclick="makeOwner('${user.userID}')">Сделать новым владельцем</button>
+                                <button class="make-owner-button" onclick="makeOwner('${admin.userID}')">Сделать новым владельцем</button>
                             </div>`;
                         });
                     } else {
@@ -265,6 +266,7 @@
             })
             .catch(error => {
                 displayPopup('Произошла ошибка, попробуйте позже');
+                console.log(error)
             });
     };
 
