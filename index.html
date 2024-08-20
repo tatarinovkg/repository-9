@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все пользователи</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f0f5;
+            padding: 20px;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: #dc3545; /* Red color */
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .result-container {
+            padding: 10px;
+            display: none;
+        }
+
+        .user-block, .admin-block, .owner-block, .class-params {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-block h3, .admin-block h3, .owner-block h3 {
+            margin: 0;
+            color: #333;
+            text-align: center;
+        }
+
+        .class-params h2 {
+            margin-top: 0;
+            text-align: center;
+            font-size: 20px;
+            color: #000000;
+        }
+
+        .class-params p {
+            text-align: center;
+            margin: 5px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .user-block p, .admin-block p, .owner-block p {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .make-owner-button {
+            background-color: #28a745;
+            display: block;
+            width: 100%;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .make-owner-button:hover {
+            background-color: #218838;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup {
+            max-width: 90%;
+            width: 500px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            opacity: 0;
+            transform: translateY(-50px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            text-align: center;
+        }
+
+        .popup.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .popup-content {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .close-popup-button {
+            display: block;
+            width: 100%;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+            font-size: 16px;
+        }
+
+        .close-popup-button:hover {
+            background-color: #c82333;
+        }
+
+        /* Green close button for closing the application */
+        .close-app-button {
+            background-color: #28a745;
+        }
+
+        .close-app-button:hover {
+            background-color: #218838;
+        }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div class="container">
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
+    <div id="searchResult" class="result-container"></div>
+</div>
+<div id="popupOverlay" class="popup-overlay">
+    <div id="popup" class="popup">
+        <div id="popupContent" class="popup-content"></div>
+        <button id="closePopupButton" class="close-popup-button">Закрыть</button>
+    </div>
+</div>
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    tg.MainButton.setText("Закрыть приложение");
+    tg.MainButton.show();
+
+    tg.MainButton.onClick(function() {
+        tg.close();
+    });
+
+    let userId = tg.initDataUnsafe.user.id;
+
+    // Проверка, является ли пользователь владельцем класса
+    const fetchOwnerData = async () => {
+        try {
+            const response = await fetch('https://louse-precious-sincerely.ngrok-free.app/api/check_owner', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: userId })
+            });
+            const data = await response.json();
+
+            if (!data.is_owner) {
+                document.getElementById('errorMessage').innerText = 'Вы не являетесь владельцем класса';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('searchResult').style.display = 'none';
+                return;
+            }
+
+            // Если пользователь является владельцем, загружаем остальные данные
+            fetchUserData();
+        } catch (error) {
+            displayPopup('Произошла ошибка при проверке прав владельца класса');
+        }
+    };
+
+    const fetchUserData = () => {
+        fetch('https://louse-precious-sincerely.ngrok-free.app/api/search/class/data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId: userId })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка сети');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const searchResult = document.getElementById('searchResult');
+                searchResult.innerHTML = '';
+
+                if (data.found) {
+                    const users = data.users;
+                    const admins = data.admins;
+
+                    searchResult.innerHTML +=
+                        `<h1>Все пользователи</h1>
+                    <h2>Выберите нового владельца класса, чтобы выйти из класса</h2>
+                    <h3>Пользователи:</h3>`;
+                    if (users.length > 0) {
+                        users.forEach(user => {
+                            searchResult.innerHTML += `
+                            <div class="user-block">
+                                <p>${user.name} (${user.TGname}) — UserID: ${user.userID}</p>
+                                <button class="make-owner-button" onclick="makeOwner('${user.userID}')">Сделать новым владельцем</button>
+                            </div>`;
+                        });
+                    } else {
+                        searchResult.innerHTML += '<p>Нет пользователей</p>';
+                    }
+
+                    searchResult.innerHTML += '<h3>Администраторы:</h3>';
+                    if (admins.length > 0) {
+                        admins.forEach(admin => {
+                            searchResult.innerHTML += `
+                            <div class="admin-block">
+                                <p>${admin.name} (${admin.TGname}) — UserID: ${admin.userID}</p>
+                                <button class="make-owner-button" onclick="makeOwner('${user.userID}')">Сделать новым владельцем</button>
+                            </div>`;
+                        });
+                    } else {
+                        searchResult.innerHTML += '<p>Нет администраторов</p>';
+                    }
+
+                    searchResult.style.display = 'block'; // Show the result container once data is available
+                } else {
+                    displayPopup('Информация не найдена');
+                }
+            })
+            .catch(error => {
+                displayPopup('Произошла ошибка, попробуйте позже');
+            });
+    };
+
+    function makeOwner(userId) {
+        let ownerUserId = tg.initDataUnsafe.user.id;
+        fetch('https://louse-precious-sincerely.ngrok-free.app/api/new/owner', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ownerId: ownerUserId, newOwnerId: userId })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка при передаче прав владельца класса');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    displayPopup('Пользователь успешно сделан новым владельцем класса, вы вышли из класса. Вы можете закрыть приложение', true);
+                } else {
+                    displayPopup('Не удалось сделать пользователя владельцем класса');
+                }
+            })
+            .catch(error => {
+                displayPopup('Произошла ошибка при передаче прав владельца класса');
+            });
+    }
+
+    function displayPopup(message, shouldReload = false) {
+        const popupOverlay = document.getElementById('popupOverlay');
+        const popupContent = document.getElementById('popupContent');
+        const closePopupButton = document.getElementById('closePopupButton');
+
+        popupContent.innerText = message;
+        popupOverlay.style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('popup').classList.add('active');
+        }, 10);
+
+        if (shouldReload) {
+            closePopupButton.classList.add('close-app-button');
+            closePopupButton.innerText = 'Закрыть приложение';
+        } else {
+            closePopupButton.classList.remove('close-app-button');
+            closePopupButton.innerText = 'Закрыть';
+        }
+
+        closePopupButton.removeEventListener('click', handleClosePopupButtonClick);
+        closePopupButton.addEventListener('click', handleClosePopupButtonClick);
+
+        function handleClosePopupButtonClick() {
+            document.getElementById('popup').classList.remove('active');
+            setTimeout(() => {
+                popupOverlay.style.display = 'none';
+                if (shouldReload) {
+                    tg.close(); // Закрыть приложение
+                }
+            }, 300);
+        }
+    }
+
+    // Запускаем проверку прав владельца
+    fetchOwnerData();
+</script>
+</body>
+</html>
