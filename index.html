@@ -255,6 +255,8 @@
                                 <button class="make-owner-button" 
                                         onmousedown="startFill(this, '${user.userID}')" 
                                         onmouseup="resetFill(this)" 
+                                        ontouchstart="startFill(this, '${user.userID}')" 
+                                        ontouchend="resetFill(this)" 
                                         onmouseleave="resetFill(this)">
                                     Удерживайте, чтобы сделать новым владельцем
                                 </button>
@@ -274,6 +276,8 @@
                                 <button class="make-owner-button" 
                                         onmousedown="startFill(this, '${admin.userID}')" 
                                         onmouseup="resetFill(this)" 
+                                        ontouchstart="startFill(this, '${admin.userID}')" 
+                                        ontouchend="resetFill(this)" 
                                         onmouseleave="resetFill(this)">
                                     Удерживайте, чтобы сделать новым владельцем
                                 </button>
