@@ -275,7 +275,12 @@
                             searchResult.innerHTML += `
                             <div class="admin-block">
                                 <p>${admin.name} (${admin.TGname}) — UserID: ${admin.userID}</p>
-                                <button class="make-owner-button" onclick="makeOwner('${admin.userID}')">Сделать новым владельцем</button>
+                                <button class="make-owner-button" 
+                                        onmousedown="startFill(this, '${user.userID}')" 
+                                        onmouseup="resetFill(this)" 
+                                        onmouseleave="resetFill(this)">
+                                    Удерживайте, чтобы сделать новым владельцем
+                                </button>
                             </div>`;
                         });
                     } else {
