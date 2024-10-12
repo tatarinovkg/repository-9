@@ -226,88 +226,50 @@
     const fetchUserData = () => {
         fetch('https://louse-precious-sincerely.ngrok-free.app/api/search/class/data', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: userId })
         })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Ошибка сети');
-                }
-                return response.json();
-            })
+            .then(response => response.ok ? response.json() : Promise.reject('Ошибка сети'))
             .then(data => {
                 const searchResult = document.getElementById('searchResult');
                 searchResult.innerHTML = '';
-
                 if (data.found) {
-                    const users = data.users;
-                    const admins = data.admins;
-
-                    searchResult.innerHTML +=
-                        `<h1>Все пользователи</h1>
-                    <h2>Выберите нового владельца класса, чтобы выйти из класса</h2>
-                    <h3>Пользователи:</h3>`;
-                    if (users.length > 0) {
-                        users.forEach(user => {
-                            searchResult.innerHTML += `
-                            <div class="user-block">
-                                <p>${user.name} (${user.TGname}) — UserID: ${user.userID}</p>
-                                <button class="make-owner-button" 
-                                        onmousedown="startFill(this, '${user.userID}')" 
-                                        onmouseup="resetFill(this)" 
-                                        ontouchstart="startFill(this, '${user.userID}')" 
-                                        ontouchend="resetFill(this)" 
-                                        onmouseleave="resetFill(this)">
-                                    Удерживайте, чтобы сделать новым владельцем
-                                </button>
-                            </div>`;
-                        });
-
-                    } else {
-                        searchResult.innerHTML += '<p>Нет пользователей</p>';
-                    }
-
-                    searchResult.innerHTML += '<h3>Администраторы:</h3>';
-                    if (admins.length > 0) {
-                        admins.forEach(admin => {
-                            searchResult.innerHTML += `
-                            <div class="admin-block">
-                                <p>${admin.name} (${admin.TGname}) — UserID: ${admin.userID}</p>
-                                <button class="make-owner-button" 
-                                        onmousedown="startFill(this, '${admin.userID}')" 
-                                        onmouseup="resetFill(this)" 
-                                        ontouchstart="startFill(this, '${admin.userID}')" 
-                                        ontouchend="resetFill(this)" 
-                                        onmouseleave="resetFill(this)">
-                                    Удерживайте, чтобы сделать новым владельцем
-                                </button>
-                            </div>`;
-                        });
-                    } else {
-                        searchResult.innerHTML += '<p>Нет администраторов</p>';
-                    }
-
-                    searchResult.style.display = 'block'; // Show the result container once data is available
+                    let content = `<h1>Все пользователи</h1><h2>Выберите нового владельца класса, чтобы выйти из класса</h2>`;
+                    content += '<h3>Пользователи:</h3>';
+                    content += data.users.length > 0 ? data.users.map(user => renderUserBlock(user)).join('') : '<p>Нет пользователей</p>';
+                    content += '<h3>Администраторы:</h3>';
+                    content += data.admins.length > 0 ? data.admins.map(admin => renderUserBlock(admin)).join('') : '<p>Нет администраторов</p>';
+                    searchResult.innerHTML = content;
+                    searchResult.style.display = 'block';
                 } else {
                     displayPopup('Информация не найдена');
                 }
             })
-            .catch(error => {
-                displayPopup('Произошла ошибка, попробуйте позже');
-                console.log(error)
-            });
+            .catch(error => displayPopup('Произошла ошибка, попробуйте позже'));
     };
+
+    function renderUserBlock(user) {
+        return `
+            <div class="user-block">
+                <p>${user.name} (${user.TGname}) — UserID: ${user.userID}</p>
+                <button class="make-owner-button" 
+                        onmousedown="startFill(this, '${user.userID}')" 
+                        onmouseup="resetFill(this)" 
+                        ontouchstart="startFill(this, '${user.userID}')" 
+                        ontouchend="resetFill(this)" 
+                        onmouseleave="resetFill(this)">
+                    Удерживайте, чтобы сделать новым владельцем
+                </button>
+            </div>`;
+    }
 
     let fillTimeout;
     
     function startFill(button, userId) {
         button.classList.add('filling');
-    
         fillTimeout = setTimeout(() => {
-            makeOwner(userId); // функция для выполнения действия
-        }, 2000); // Время заполнения (0.5 сек)
+            makeOwner(userId);
+        }, 2000);
     }
     
     function resetFill(button) {
