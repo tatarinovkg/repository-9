@@ -200,7 +200,7 @@
     // Проверка, является ли пользователь владельцем класса
     const fetchOwnerData = async () => {
         try {
-            const response = await fetch('https://louse-precious-sincerely.ngrok-free.app/api/check_owner', {
+            const response = await fetch('https://tatarinovkg.cloudpub.ru/api/check_owner', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -224,7 +224,7 @@
     };
 
     const fetchUserData = () => {
-        fetch('https://louse-precious-sincerely.ngrok-free.app/api/search/class/data', {
+        fetch('https://tatarinovkg.cloudpub.ru/api/search/class/data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: userId })
@@ -279,7 +279,7 @@
 
     function makeOwner(userId) {
         let ownerUserId = tg.initDataUnsafe.user.id;
-        fetch('https://louse-precious-sincerely.ngrok-free.app/api/new/owner', {
+        fetch('https://tatarinovkg.cloudpub.ru/api/new/owner', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
